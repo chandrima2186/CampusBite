@@ -1,7 +1,13 @@
 
-import "./../styles/Cart.css";
+import "./../Styles/Cart.css";
 
-function Cart({ cartItems, onIncrease, onDecrease, onClose }) {
+function Cart({
+  cartItems,
+  onIncrease,
+  onDecrease,
+  onClose,
+  onCheckout,
+}) {
   const totalItems = cartItems.reduce(
     (total, item) => total + item.quantity,
     0
@@ -40,7 +46,9 @@ function Cart({ cartItems, onIncrease, onDecrease, onClose }) {
           <div className="cart-items">
             {cartItems.map((item) => (
               <article className="cart-item" key={item.id}>
-                <div className="cart-item-emoji">{item.emoji}</div>
+                <div className="cart-item-emoji">
+                  {item.emoji}
+                </div>
 
                 <div className="cart-item-details">
                   <h3>{item.name}</h3>
@@ -85,9 +93,7 @@ function Cart({ cartItems, onIncrease, onDecrease, onClose }) {
             <button
               type="button"
               className="checkout-button"
-              onClick={() =>
-                alert("Checkout feature will be added later!")
-              }
+              onClick={onCheckout}
             >
               Proceed to Checkout
             </button>

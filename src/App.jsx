@@ -1,5 +1,4 @@
 
-
 import { useState } from "react";
 import "./App.css";
 
@@ -7,11 +6,14 @@ import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
 import FoodMenu from "./Components/FoodMenu";
 import Cart from "./Components/Cart";
+import Checkout from "./Components/Checkout";
 import About from "./Components/About";
 import Footer from "./Components/Footer";
+
 function App() {
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const cartCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -52,11 +54,25 @@ function App() {
     );
   };
 
+  const handleCheckout = () => {
+    setShowCart(false);
+    setShowCheckout(true);
+  };
+
+  const handleOrderComplete = () => {
+    setCartItems([]);
+    setShowCheckout(false);
+    setShowCart(false);
+  };
+
   return (
     <div className="app">
       <Navbar
         cartCount={cartCount}
-        onCartClick={() => setShowCart((visible) => !visible)}
+        onCartClick={() => {
+          setShowCheckout(false);
+          setShowCart((visible) => !visible);
+        }}
       />
 
       <main>
@@ -64,19 +80,31 @@ function App() {
 
         <FoodMenu onAddToCart={handleAddToCart} />
 
-        {showCart && (
+        {showCart && !showCheckout && (
           <Cart
             cartItems={cartItems}
             onIncrease={handleIncrease}
             onDecrease={handleDecrease}
             onClose={() => setShowCart(false)}
+            onCheckout={handleCheckout}
           />
         )}
 
-       <About />
+        {showCheckout && (
+          <Checkout
+            cartItems={cartItems}
+            onBack={() => {
+              setShowCheckout(false);
+              setShowCart(true);
+            }}
+            onOrderComplete={handleOrderComplete}
+          />
+        )}
+
+        <About />
       </main>
 
-     <Footer />
+      <Footer />
     </div>
   );
 }
