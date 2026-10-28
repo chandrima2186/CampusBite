@@ -1,0 +1,116 @@
+
+/* ===== Global Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 85px;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #ffffff;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+/* ===== Main App Layout ===== */
+.app {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
+}
+
+main {
+  width: 100%;
+}
+
+/* ===== Shared Container ===== */
+.container {
+  width: min(1200px, 100% - 48px);
+  margin-inline: auto;
+}
+
+/* ===== Shared Section Heading ===== */
+.section-heading {
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin-bottom: 10px;
+  color: #1f2937;
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.section-heading p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* ===== Shared Button ===== */
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 8px;
+  background: #f97316;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primary-button:hover {
+  background: #ea580c;
+  transform: translateY(-2px);
+}
+
+.primary-button:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #fdba74;
+  outline-offset: 3px;
+}
+
+/* ===== Responsive Layout ===== */
+@media (max-width: 768px) {
+  html {
+    scroll-padding-top: 75px;
+  }
+
+  .container {
+    width: min(100% - 32px, 1200px);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: calc(100% - 24px);
+  }
+}
