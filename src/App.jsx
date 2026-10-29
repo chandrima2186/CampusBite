@@ -18,9 +18,10 @@ function App() {
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // First open the Login page
+  // Login page opens first
   const [currentPage, setCurrentPage] = useState("login");
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentToken, setCurrentToken] = useState(null);
 
   const cartCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -73,8 +74,10 @@ function App() {
     setCurrentPage("home");
   };
 
-  const handleLogin = (user) => {
+  // Save user information and JWT token after login
+  const handleLogin = (user, token) => {
     setCurrentUser(user);
+    setCurrentToken(token);
     setCurrentPage("home");
     setShowCart(false);
     setShowCheckout(false);
@@ -82,9 +85,11 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setCurrentToken(null);
     setCurrentPage("login");
     setShowCart(false);
     setShowCheckout(false);
+    setCartItems([]);
   };
 
   const openPage = (page) => {
@@ -138,6 +143,7 @@ function App() {
             {showCheckout && (
               <Checkout
                 cartItems={cartItems}
+                token={currentToken}
                 onBack={() => {
                   setShowCheckout(false);
                   setShowCart(true);

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import "./../Styles/Checkout.css";
 
-function Checkout({ cartItems, onBack, onOrderComplete }) {
+function Checkout({ cartItems, token, onBack, onOrderComplete }) {
   const [formData, setFormData] = useState({
     role: "Student",
     name: "",
@@ -47,6 +47,11 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
       return;
     }
 
+    if (!token) {
+      setErrorMessage("Your login session is missing. Please log in again.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage("");
 
@@ -57,6 +62,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             customer_name: formData.name.trim(),
@@ -64,8 +70,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
             role: formData.role.toLowerCase(),
             phone: formData.phone.trim(),
             location: formData.location,
-            location_details:
-              formData.locationDetails.trim(),
+            location_details: formData.locationDetails.trim(),
             pickup_time: formData.pickupTime,
             items: cartItems.map((item) => ({
               food_id: Number(item.id),
@@ -117,15 +122,12 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
             <p>
               <strong>Order ID:</strong> {orderNumber}
             </p>
-
             <p>
               <strong>Role:</strong> {formData.role}
             </p>
-
             <p>
               <strong>Phone:</strong> {formData.phone}
             </p>
-
             <p>
               <strong>Location:</strong> {formData.location}
             </p>
@@ -141,15 +143,13 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
               <strong>Pickup time:</strong>{" "}
               {formData.pickupTime}
             </p>
-
             <p>
               <strong>Total:</strong> ৳{confirmedTotal.toFixed(2)}
             </p>
           </div>
 
           <p className="checkout-note">
-            Your order has been saved to the CampusBite
-            database.
+            Your order has been saved to the CampusBite database.
           </p>
 
           <button
@@ -169,9 +169,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
       <div className="checkout-heading">
         <p className="checkout-eyebrow">CAMPUSBITE</p>
         <h2>Complete Your Order</h2>
-        <p>
-          Enter your details to prepare your canteen order.
-        </p>
+        <p>Enter your details to prepare your canteen order.</p>
       </div>
 
       <div className="checkout-layout">
@@ -196,9 +194,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
           </div>
 
           <div className="checkout-field">
-            <label htmlFor="name">
-              {formData.role} Name *
-            </label>
+            <label htmlFor="name">{formData.role} Name *</label>
             <input
               id="name"
               name="name"
@@ -244,14 +240,10 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
             />
           </div>
 
-          <h3 className="checkout-subheading">
-            Campus Location
-          </h3>
+          <h3 className="checkout-subheading">Campus Location</h3>
 
           <div className="checkout-field">
-            <label htmlFor="location">
-              Where are you currently? *
-            </label>
+            <label htmlFor="location">Where are you currently? *</label>
             <select
               id="location"
               name="location"
@@ -261,13 +253,9 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
             >
               <option value="Classroom">Classroom</option>
               <option value="Library">Library</option>
-              <option value="Teacher's Room">
-                Teacher's Room
-              </option>
+              <option value="Teacher's Room">Teacher's Room</option>
               <option value="Canteen">Canteen</option>
-              <option value="Other">
-                Other campus location
-              </option>
+              <option value="Other">Other campus location</option>
             </select>
           </div>
 
@@ -276,7 +264,6 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
               Room / Building / Floor Details
               {formData.location === "Other" ? " *" : ""}
             </label>
-
             <input
               id="locationDetails"
               name="locationDetails"
@@ -316,10 +303,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
           {errorMessage && (
             <p
               role="alert"
-              style={{
-                color: "#ef4444",
-                marginBottom: "16px",
-              }}
+              style={{ color: "#ef4444", marginBottom: "16px" }}
             >
               {errorMessage}
             </p>
@@ -344,10 +328,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
           ) : (
             <div className="checkout-order-items">
               {cartItems.map((item) => (
-                <div
-                  className="checkout-order-item"
-                  key={item.id}
-                >
+                <div className="checkout-order-item" key={item.id}>
                   <span className="checkout-food-emoji">
                     {item.emoji}
                   </span>
@@ -359,9 +340,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
                     </small>
                   </div>
 
-                  <strong>
-                    ৳{item.price * item.quantity}
-                  </strong>
+                  <strong>৳{item.price * item.quantity}</strong>
                 </div>
               ))}
             </div>

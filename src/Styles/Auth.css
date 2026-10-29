@@ -1,0 +1,148 @@
+
+.auth-section {
+  min-height: 75vh;
+  padding: 70px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 36px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+}
+
+.auth-eyebrow {
+  margin: 0 0 10px;
+  color: #ea580c;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.auth-card h2 {
+  margin: 0 0 10px;
+  color: #172033;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.auth-description {
+  margin: 0 0 26px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.auth-field label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-field input,
+.auth-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-field input:focus,
+.auth-field select:focus {
+  border-color: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+}
+
+.auth-primary-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #ea580c;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.auth-primary-button:hover:not(:disabled) {
+  background: #c2410c;
+  transform: translateY(-1px);
+}
+
+.auth-primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  margin: 22px 0 0;
+  color: #64748b;
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #ea580c;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-link-button:hover {
+  text-decoration: underline;
+}
+
+.auth-error {
+  margin: 0 0 14px;
+  color: #dc2626;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-success {
+  margin: 0 0 14px;
+  color: #15803d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .auth-section {
+    padding: 40px 14px;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  .auth-card h2 {
+    font-size: 25px;
+  }
+}
