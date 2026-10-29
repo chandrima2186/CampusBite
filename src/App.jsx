@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import "./App.css";
+import "./Styles/Auth.css";
 
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
@@ -9,11 +10,17 @@ import Cart from "./Components/Cart";
 import Checkout from "./Components/Checkout";
 import About from "./Components/About";
 import Footer from "./Components/Footer";
+import Login from "./Components/Login";
+import Register from "./Components/Register";
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+
+  // First open the Login page
+  const [currentPage, setCurrentPage] = useState("login");
+  const [currentUser, setCurrentUser] = useState(null);
 
   const cartCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -63,48 +70,88 @@ function App() {
     setCartItems([]);
     setShowCheckout(false);
     setShowCart(false);
+    setCurrentPage("home");
+  };
+
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setCurrentPage("home");
+    setShowCart(false);
+    setShowCheckout(false);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentPage("login");
+    setShowCart(false);
+    setShowCheckout(false);
+  };
+
+  const openPage = (page) => {
+    setShowCart(false);
+    setShowCheckout(false);
+    setCurrentPage(page);
   };
 
   return (
     <div className="app">
       <Navbar
         cartCount={cartCount}
+        currentUser={currentUser}
+        onLoginClick={() => openPage("login")}
+        onRegisterClick={() => openPage("register")}
+        onLogout={handleLogout}
         onCartClick={() => {
           setShowCheckout(false);
           setShowCart((visible) => !visible);
         }}
       />
 
-      <main>
-        <Hero />
-
-        <FoodMenu onAddToCart={handleAddToCart} />
-
-        {showCart && !showCheckout && (
-          <Cart
-            cartItems={cartItems}
-            onIncrease={handleIncrease}
-            onDecrease={handleDecrease}
-            onClose={() => setShowCart(false)}
-            onCheckout={handleCheckout}
+      {!currentUser ? (
+        currentPage === "register" ? (
+          <Register
+            onShowLogin={() => openPage("login")}
           />
-        )}
-
-        {showCheckout && (
-          <Checkout
-            cartItems={cartItems}
-            onBack={() => {
-              setShowCheckout(false);
-              setShowCart(true);
-            }}
-            onOrderComplete={handleOrderComplete}
+        ) : (
+          <Login
+            onLogin={handleLogin}
+            onShowRegister={() => openPage("register")}
           />
-        )}
+        )
+      ) : (
+        <>
+          <main>
+            <Hero />
 
-        <About />
-      </main>
+            <FoodMenu onAddToCart={handleAddToCart} />
 
-      <Footer />
+            {showCart && !showCheckout && (
+              <Cart
+                cartItems={cartItems}
+                onIncrease={handleIncrease}
+                onDecrease={handleDecrease}
+                onClose={() => setShowCart(false)}
+                onCheckout={handleCheckout}
+              />
+            )}
+
+            {showCheckout && (
+              <Checkout
+                cartItems={cartItems}
+                onBack={() => {
+                  setShowCheckout(false);
+                  setShowCart(true);
+                }}
+                onOrderComplete={handleOrderComplete}
+              />
+            )}
+
+            <About />
+          </main>
+
+          <Footer />
+        </>
+      )}
     </div>
   );
 }
