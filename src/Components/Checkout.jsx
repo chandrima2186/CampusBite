@@ -15,6 +15,9 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
 
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [confirmedTotal, setConfirmedTotal] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const totalItems = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -33,21 +36,67 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
       ...previous,
       [name]: value,
     }));
+
+    setErrorMessage("");
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (cartItems.length === 0) {
+    if (isSubmitting || cartItems.length === 0) {
       return;
     }
 
-    // Temporary frontend confirmation.
-    // A real database order will be added with the backend.
-    setOrderNumber(
-      `CB-${Date.now().toString().slice(-8)}`
-    );
-    setOrderPlaced(true);
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customer_name: formData.name.trim(),
+            institution_id: formData.institutionId.trim(),
+            role: formData.role.toLowerCase(),
+            phone: formData.phone.trim(),
+            location: formData.location,
+            location_details:
+              formData.locationDetails.trim(),
+            pickup_time: formData.pickupTime,
+            items: cartItems.map((item) => ({
+              food_id: Number(item.id),
+              quantity: Number(item.quantity),
+            })),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Could not place your order."
+        );
+      }
+
+      setOrderNumber(`CB-${data.orderId}`);
+      setConfirmedTotal(Number(data.totalPrice));
+      setOrderPlaced(true);
+    } catch (error) {
+      console.error("Checkout error:", error);
+
+      setErrorMessage(
+        error.message === "Failed to fetch"
+          ? "Cannot connect to the backend. Make sure your backend server is running on port 5000."
+          : error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (orderPlaced) {
@@ -60,38 +109,47 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
           <h2>Order Confirmation</h2>
 
           <p>
-            Thank you, {formData.name}! Your order details
-            have been received in this demo.
+            Thank you, {formData.name}! Your order has
+            been saved successfully.
           </p>
 
           <div className="confirmation-details">
             <p>
-              <strong>Demo Order ID:</strong> {orderNumber}
+              <strong>Order ID:</strong> {orderNumber}
             </p>
+
             <p>
               <strong>Role:</strong> {formData.role}
             </p>
+
+            <p>
+              <strong>Phone:</strong> {formData.phone}
+            </p>
+
             <p>
               <strong>Location:</strong> {formData.location}
             </p>
+
             {formData.locationDetails && (
               <p>
                 <strong>Location details:</strong>{" "}
                 {formData.locationDetails}
               </p>
             )}
+
             <p>
               <strong>Pickup time:</strong>{" "}
               {formData.pickupTime}
             </p>
+
             <p>
-              <strong>Total:</strong> ৳{totalPrice}
+              <strong>Total:</strong> ৳{confirmedTotal.toFixed(2)}
             </p>
           </div>
 
           <p className="checkout-note">
-            This is a frontend demo. The order has not
-            been saved to a database or sent to the canteen.
+            Your order has been saved to the CampusBite
+            database.
           </p>
 
           <button
@@ -207,7 +265,9 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
                 Teacher's Room
               </option>
               <option value="Canteen">Canteen</option>
-              <option value="Other">Other campus location</option>
+              <option value="Other">
+                Other campus location
+              </option>
             </select>
           </div>
 
@@ -216,6 +276,7 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
               Room / Building / Floor Details
               {formData.location === "Other" ? " *" : ""}
             </label>
+
             <input
               id="locationDetails"
               name="locationDetails"
@@ -245,18 +306,33 @@ function Checkout({ cartItems, onBack, onOrderComplete }) {
               <option value="2:30 PM">2:30 PM</option>
               <option value="3:00 PM">3:00 PM</option>
             </select>
+
             <small>
               These are sample times; we can adjust them
               to your canteen's actual schedule.
             </small>
           </div>
 
+          {errorMessage && (
+            <p
+              role="alert"
+              style={{
+                color: "#ef4444",
+                marginBottom: "16px",
+              }}
+            >
+              {errorMessage}
+            </p>
+          )}
+
           <button
             type="submit"
             className="checkout-primary-button"
-            disabled={cartItems.length === 0}
+            disabled={isSubmitting || cartItems.length === 0}
           >
-            Place Order · ৳{totalPrice}
+            {isSubmitting
+              ? "Placing Order..."
+              : `Place Order · ৳${totalPrice}`}
           </button>
         </form>
 
