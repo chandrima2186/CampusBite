@@ -195,7 +195,7 @@ function AdminDashboard({ currentUser, token }) {
       description: food.description || "",
       price: food.price ?? "",
       category: food.category || "Fast Food",
-     image_url: food.image_url || "",
+      image_url: food.image_url || "",
     });
 
     setEditingFoodId(food.id);
@@ -292,6 +292,14 @@ function AdminDashboard({ currentUser, token }) {
     );
   }
 
+  const availableFoods = foods.filter(
+    (food) => Number(food.is_available) === 1
+  );
+
+  const unavailableFoods = foods.filter(
+    (food) => Number(food.is_available) === 0
+  );
+
   const stats = [
     { title: "Total Foods", value: dashboard.availableFoods },
     { title: "Available Foods", value: dashboard.availableFoods },
@@ -306,6 +314,95 @@ function AdminDashboard({ currentUser, token }) {
       value: `৳${Number(dashboard.totalSales).toFixed(2)}`,
     },
   ];
+
+  // Reusable food table
+  const renderFoodTable = (foodList, isAvailable) => {
+    if (foodList.length === 0) {
+      return (
+        <p className="admin-food-empty">
+          No {isAvailable ? "available" : "unavailable"} foods found.
+        </p>
+      );
+    }
+
+    return (
+      <div className="admin-food-table-wrapper">
+        <table className="admin-food-table">
+          <thead>
+            <tr>
+              <th>Food</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Availability</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {foodList.map((food) => (
+              <tr key={food.id}>
+                <td>
+                  <div className="admin-food-name">
+                    {food.image_url ? (
+                      <img
+                        src={food.image_url}
+                        alt={food.name}
+                        className="admin-food-thumbnail"
+                      />
+                    ) : (
+                      <div className="admin-food-no-image">No Image</div>
+                    )}
+
+                    <div>
+                      <strong>{food.name}</strong>
+                      {food.description && <small>{food.description}</small>}
+                    </div>
+                  </div>
+                </td>
+
+                <td>{food.category || "Other"}</td>
+                <td>৳{Number(food.price).toFixed(2)}</td>
+
+                <td>
+                  <button
+                    type="button"
+                    className={
+                      isAvailable
+                        ? "admin-availability available"
+                        : "admin-availability unavailable"
+                    }
+                    onClick={() => handleAvailability(food)}
+                  >
+                    {isAvailable ? "Available" : "Unavailable"}
+                  </button>
+                </td>
+
+                <td>
+                  <div className="admin-food-actions">
+                    <button
+                      type="button"
+                      className="admin-food-edit"
+                      onClick={() => handleEditFood(food)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className="admin-food-delete"
+                      onClick={() => handleDeleteFood(food)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <main className="admin-dashboard">
@@ -402,35 +499,35 @@ function AdminDashboard({ currentUser, token }) {
                 ))}
               </select>
             </div>
-              
-              <div className="admin-form-group admin-form-full">
-  <label htmlFor="image_url">Food Image URL</label>
-  <input
-    id="image_url"
-    name="image_url"
-    type="url"
-    placeholder="Paste food image URL here"
-    value={foodForm.image_url}
-    onChange={handleFoodInput}
-  />
 
-  {foodForm.image_url && (
-    <div className="food-image-preview">
-      <p>Image Preview:</p>
-      <img
-        src={foodForm.image_url}
-        alt="Food preview"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-        onLoad={(e) => {
-          e.currentTarget.style.display = "block";
-        }}
-      />
-    </div>
-  )}
-</div>
-            
+            <div className="admin-form-group admin-form-full">
+              <label htmlFor="image_url">Food Image URL</label>
+              <input
+                id="image_url"
+                name="image_url"
+                type="url"
+                placeholder="Paste food image URL here"
+                value={foodForm.image_url}
+                onChange={handleFoodInput}
+              />
+
+              {foodForm.image_url && (
+                <div className="food-image-preview">
+                  <p>Image Preview:</p>
+                  <img
+                    src={foodForm.image_url}
+                    alt="Food preview"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                    onLoad={(event) => {
+                      event.currentTarget.style.display = "block";
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="admin-form-group admin-form-full">
               <label htmlFor="food-description">Description</label>
               <textarea
@@ -472,96 +569,26 @@ function AdminDashboard({ currentUser, token }) {
         {foodMessage && <p className="admin-food-success">{foodMessage}</p>}
         {foodError && <p className="admin-food-error">{foodError}</p>}
 
-        {/* Food List */}
+        {/* Available Foods */}
         <div className="admin-food-list-heading">
-          <h3>Food List ({foods.length})</h3>
+          <h3>Available Foods ({availableFoods.length})</h3>
         </div>
 
         {foodsLoading ? (
           <p className="admin-food-loading">Loading foods...</p>
-        ) : foods.length === 0 ? (
-          <p className="admin-food-empty">No foods found.</p>
         ) : (
-          <div className="admin-food-table-wrapper">
-            <table className="admin-food-table">
-              <thead>
-                <tr>
-                  <th>Food</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Availability</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+          renderFoodTable(availableFoods, true)
+        )}
 
-              <tbody>
-                {foods.map((food) => (
-                  <tr key={food.id}>
-                    <td>
-                      <div className="admin-food-name">
-                       {food.image_url ? (
-  <img
-    src={food.image_url}
-    alt={food.name}
-    className="admin-food-thumbnail"
-  />
-) : (
-  <div className="admin-food-no-image">
-    No Image
-  </div>
-)}
-                        <div>
-                          <strong>{food.name}</strong>
-                          {food.description && (
-                            <small>{food.description}</small>
-                          )}
-                        </div>
-                      </div>
-                    </td>
+        {/* Unavailable Foods */}
+        <div className="admin-food-list-heading">
+          <h3>Unavailable Foods ({unavailableFoods.length})</h3>
+        </div>
 
-                    <td>{food.category || "Other"}</td>
-                    <td>৳{Number(food.price).toFixed(2)}</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        className={
-                          Number(food.is_available) === 1
-                            ? "admin-availability available"
-                            : "admin-availability unavailable"
-                        }
-                        onClick={() => handleAvailability(food)}
-                      >
-                        {Number(food.is_available) === 1
-                          ? "Available"
-                          : "Unavailable"}
-                      </button>
-                    </td>
-
-                    <td>
-                      <div className="admin-food-actions">
-                        <button
-                          type="button"
-                          className="admin-food-edit"
-                          onClick={() => handleEditFood(food)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          className="admin-food-delete"
-                          onClick={() => handleDeleteFood(food)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {foodsLoading ? (
+          <p className="admin-food-loading">Loading foods...</p>
+        ) : (
+          renderFoodTable(unavailableFoods, false)
         )}
       </section>
 
