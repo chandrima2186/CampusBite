@@ -30,15 +30,19 @@ function AdminDashboard({ currentUser, token }) {
   const [editingFoodId, setEditingFoodId] = useState(null);
   const [savingFood, setSavingFood] = useState(false);
 
-  // Food search and category filter
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Order search and status filter
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [selectedOrderStatus, setSelectedOrderStatus] = useState("All");
 
-  // Load dashboard stats and orders
+  // Order Details Popup
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+
+  // Load dashboard and orders
   const loadDashboard = async () => {
     try {
       setLoading(true);
@@ -73,7 +77,7 @@ function AdminDashboard({ currentUser, token }) {
     }
   };
 
-  // Load foods from database
+  // Load foods
   const loadAdminFoods = async () => {
     try {
       setFoodsLoading(true);
@@ -104,6 +108,44 @@ function AdminDashboard({ currentUser, token }) {
     loadAdminFoods();
   }, [token]);
 
+  // View order details
+  const viewOrderDetails = async (orderId) => {
+    try {
+      setSelectedOrder(orderId);
+      setOrderDetails(null);
+      setDetailsError("");
+      setDetailsLoading(true);
+
+      const response = await fetch(`${API_URL}/orders/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not load order details.");
+      }
+
+      setOrderDetails({
+        order: data.order,
+        items: data.items,
+      });
+    } catch (error) {
+      setDetailsError(error.message || "Could not load order details.");
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  // Close order details
+  const closeOrderDetails = () => {
+    setSelectedOrder(null);
+    setOrderDetails(null);
+    setDetailsError("");
+  };
+
   // Update order status
   const updateStatus = async (orderId, status) => {
     try {
@@ -123,13 +165,17 @@ function AdminDashboard({ currentUser, token }) {
       }
 
       alert("Order status updated successfully!");
-      loadDashboard();
+      await loadDashboard();
+
+      if (selectedOrder === orderId) {
+        await viewOrderDetails(orderId);
+      }
     } catch (error) {
       alert(error.message);
     }
   };
 
-  // Handle food form inputs
+  // Food form input
   const handleFoodInput = (event) => {
     const { name, value } = event.target;
 
@@ -145,7 +191,7 @@ function AdminDashboard({ currentUser, token }) {
     setEditingFoodId(null);
   };
 
-  // Add new food or update existing food
+  // Add or update food
   const handleFoodSubmit = async (event) => {
     event.preventDefault();
 
@@ -254,7 +300,7 @@ function AdminDashboard({ currentUser, token }) {
     }
   };
 
-  // Soft-delete food
+  // Delete food (soft delete)
   const handleDeleteFood = async (food) => {
     const confirmed = window.confirm(
       `Are you sure you want to make "${food.name}" unavailable?`
@@ -300,7 +346,7 @@ function AdminDashboard({ currentUser, token }) {
     );
   }
 
-  // Search and category filtering
+  // Food filtering
   const filteredFoods = foods.filter((food) => {
     const search = searchTerm.trim().toLowerCase();
 
@@ -309,8 +355,7 @@ function AdminDashboard({ currentUser, token }) {
       (food.description || "").toLowerCase().includes(search);
 
     const matchesCategory =
-      selectedCategory === "All" ||
-      food.category === selectedCategory;
+      selectedCategory === "All" || food.category === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -323,7 +368,7 @@ function AdminDashboard({ currentUser, token }) {
     (food) => Number(food.is_available) === 0
   );
 
-  // Search and status filtering for orders
+  // Order filtering
   const filteredOrders = orders.filter((order) => {
     const search = orderSearchTerm.trim().toLowerCase();
 
@@ -340,8 +385,9 @@ function AdminDashboard({ currentUser, token }) {
   });
 
   const stats = [
-    { title: "Total Foods", value: dashboard.availableFoods },
+    { title: "Total Foods", value: dashboard.totalFoods },
     { title: "Available Foods", value: dashboard.availableFoods },
+    { title: "Unavailable Foods", value: dashboard.unavailableFoods },
     { title: "Total Orders", value: dashboard.totalOrders },
     { title: "Pending Orders", value: dashboard.pendingOrders },
     { title: "Preparing Orders", value: dashboard.preparingOrders },
@@ -485,7 +531,7 @@ function AdminDashboard({ currentUser, token }) {
           </button>
         </div>
 
-        {/* Add / Edit Food Form */}
+        {/* Food Form */}
         <form
           id="admin-food-form"
           className="admin-food-form"
@@ -653,7 +699,6 @@ function AdminDashboard({ currentUser, token }) {
           Showing {filteredFoods.length} of {foods.length} foods
         </p>
 
-        {/* Available Foods */}
         <div className="admin-food-list-heading">
           <h3>Available Foods ({availableFoods.length})</h3>
         </div>
@@ -664,7 +709,6 @@ function AdminDashboard({ currentUser, token }) {
           renderFoodTable(availableFoods, true)
         )}
 
-        {/* Unavailable Foods */}
         <div className="admin-food-list-heading">
           <h3>Unavailable Foods ({unavailableFoods.length})</h3>
         </div>
@@ -703,9 +747,7 @@ function AdminDashboard({ currentUser, token }) {
             <select
               id="order-status-filter"
               value={selectedOrderStatus}
-              onChange={(event) =>
-                setSelectedOrderStatus(event.target.value)
-              }
+              onChange={(event) => setSelectedOrderStatus(event.target.value)}
             >
               <option value="All">All Orders</option>
               <option value="pending">Pending</option>
@@ -746,6 +788,7 @@ function AdminDashboard({ currentUser, token }) {
                   <th>Total</th>
                   <th>Status</th>
                   <th>Update Status</th>
+                  <th>Details</th>
                 </tr>
               </thead>
 
@@ -776,6 +819,15 @@ function AdminDashboard({ currentUser, token }) {
                         <option value="cancelled">Cancelled</option>
                       </select>
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-view-details"
+                        onClick={() => viewOrderDetails(order.id)}
+                      >
+                        View Details
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -783,6 +835,145 @@ function AdminDashboard({ currentUser, token }) {
           </div>
         )}
       </section>
+
+      {/* Order Details Popup */}
+      {selectedOrder !== null && (
+        <div
+          className="order-details-overlay"
+          onClick={closeOrderDetails}
+        >
+          <div
+            className="order-details-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="order-details-header">
+              <div>
+                <p>ORDER INFORMATION</p>
+                <h2>Order #{selectedOrder}</h2>
+              </div>
+
+              <button
+                type="button"
+                className="order-details-close"
+                onClick={closeOrderDetails}
+              >
+                ×
+              </button>
+            </div>
+
+            {detailsLoading ? (
+              <p className="order-details-message">
+                Loading order details...
+              </p>
+            ) : detailsError ? (
+              <p className="order-details-error">{detailsError}</p>
+            ) : orderDetails ? (
+              <>
+                <div className="order-details-section">
+                  <h3>Customer Information</h3>
+
+                  <div className="order-details-grid">
+                    <div>
+                      <span>Customer Name</span>
+                      <strong>{orderDetails.order.customer_name}</strong>
+                    </div>
+
+                    <div>
+                      <span>Role</span>
+                      <strong>{orderDetails.order.role}</strong>
+                    </div>
+
+                    <div>
+                      <span>Student / Teacher ID</span>
+                      <strong>
+                        {orderDetails.order.institution_id || "N/A"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Phone</span>
+                      <strong>{orderDetails.order.phone || "N/A"}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="order-details-section">
+                  <h3>Pickup Information</h3>
+
+                  <div className="order-details-grid">
+                    <div>
+                      <span>Location</span>
+                      <strong>{orderDetails.order.location || "N/A"}</strong>
+                    </div>
+
+                    <div>
+                      <span>Location Details</span>
+                      <strong>
+                        {orderDetails.order.location_details || "N/A"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Pickup Time</span>
+                      <strong>
+                        {orderDetails.order.pickup_time || "N/A"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Order Status</span>
+                      <strong className={`order-status ${orderDetails.order.status}`}>
+                        {orderDetails.order.status}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="order-details-section">
+                  <h3>Ordered Food Items</h3>
+
+                  {orderDetails.items.length === 0 ? (
+                    <p>No food items found.</p>
+                  ) : (
+                    <div className="order-details-items">
+                      {orderDetails.items.map((item, index) => (
+                        <div
+                          className="order-details-item"
+                          key={`${item.food_id}-${index}`}
+                        >
+                          <div className="order-details-food-icon">
+                            {item.emoji || "🍽️"}
+                          </div>
+
+                          <div className="order-details-food-info">
+                            <strong>
+                              {item.food_name || "Food unavailable"}
+                            </strong>
+                            <span>
+                              ৳{Number(item.price).toFixed(2)} × {item.quantity}
+                            </span>
+                          </div>
+
+                          <strong>
+                            ৳{Number(item.subtotal).toFixed(2)}
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="order-details-total">
+                  <span>Total Price</span>
+                  <strong>
+                    ৳{Number(orderDetails.order.total_price).toFixed(2)}
+                  </strong>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

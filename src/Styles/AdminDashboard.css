@@ -585,3 +585,204 @@
     width: 100%;
   }
 }
+
+
+/* ===================================
+   ADMIN ORDER DETAILS
+=================================== */
+
+.admin-view-details {
+  padding: 8px 13px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-view-details:hover {
+  background: #1d4ed8;
+}
+
+.order-details-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.order-details-modal {
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.order-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+
+.order-details-header p {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0 0 5px;
+}
+
+.order-details-header h2 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.order-details-close {
+  border: none;
+  background: #f1f5f9;
+  color: #334155;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.order-details-section {
+  margin-bottom: 24px;
+}
+
+.order-details-section h3 {
+  font-size: 17px;
+  color: #1e293b;
+  margin-bottom: 15px;
+}
+
+.order-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.order-details-grid div {
+  background: #f8fafc;
+  padding: 13px;
+  border-radius: 9px;
+  min-width: 0;
+}
+
+.order-details-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.order-details-grid strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.order-details-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-details-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 9px;
+}
+
+.order-details-food-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.order-details-food-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.order-details-food-info strong {
+  color: #0f172a;
+}
+
+.order-details-food-info span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.order-details-item > strong {
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.order-details-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px;
+  background: #eff6ff;
+  border-radius: 10px;
+  color: #1e3a8a;
+  font-size: 17px;
+}
+
+.order-details-total strong {
+  font-size: 21px;
+}
+
+.order-details-message,
+.order-details-error {
+  padding: 20px;
+  text-align: center;
+}
+
+.order-details-error {
+  color: #dc2626;
+}
+
+@media (max-width: 600px) {
+  .order-details-modal {
+    padding: 18px;
+  }
+
+  .order-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-details-item {
+    flex-wrap: wrap;
+  }
+}
