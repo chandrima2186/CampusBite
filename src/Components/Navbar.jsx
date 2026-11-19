@@ -9,6 +9,8 @@ function Navbar({
   onRegisterClick,
   onLogout,
 }) {
+  const isAdmin = currentUser?.role === "admin";
+
   return (
     <header className="navbar">
       <a
@@ -26,24 +28,30 @@ function Navbar({
 
       {currentUser ? (
         <>
-          <nav>
-            <a href="#home">Home</a>
-            <a href="#menu">Food Menu</a>
-            <a href="#about">About</a>
-          </nav>
+          {!isAdmin && (
+            <nav>
+              <a href="#home">Home</a>
+              <a href="#menu">Food Menu</a>
+              <a href="#about">About</a>
+            </nav>
+          )}
 
           <div className="navbar-actions">
             <span className="navbar-welcome">
-              Hi, {currentUser.name}
+              {isAdmin
+                ? `Admin: ${currentUser.name}`
+                : `Hi, ${currentUser.name}`}
             </span>
 
-            <button
-              type="button"
-              className="cart-button"
-              onClick={onCartClick}
-            >
-              🛒 Cart ({cartCount})
-            </button>
+            {!isAdmin && (
+              <button
+                type="button"
+                className="cart-button"
+                onClick={onCartClick}
+              >
+                🛒 Cart ({cartCount})
+              </button>
+            )}
 
             <button
               type="button"

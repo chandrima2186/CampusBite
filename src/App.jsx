@@ -12,13 +12,13 @@ import About from "./Components/About";
 import Footer from "./Components/Footer";
 import Login from "./Components/Login";
 import Register from "./Components/Register";
+import AdminDashboard from "./Components/AdminDashboard";
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Login page opens first
   const [currentPage, setCurrentPage] = useState("login");
   const [currentUser, setCurrentUser] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
@@ -74,7 +74,6 @@ function App() {
     setCurrentPage("home");
   };
 
-  // Save user information and JWT token after login
   const handleLogin = (user, token) => {
     setCurrentUser(user);
     setCurrentToken(token);
@@ -98,6 +97,8 @@ function App() {
     setCurrentPage(page);
   };
 
+  const isAdmin = currentUser?.role === "admin";
+
   return (
     <div className="app">
       <Navbar
@@ -114,15 +115,18 @@ function App() {
 
       {!currentUser ? (
         currentPage === "register" ? (
-          <Register
-            onShowLogin={() => openPage("login")}
-          />
+          <Register onShowLogin={() => openPage("login")} />
         ) : (
           <Login
             onLogin={handleLogin}
             onShowRegister={() => openPage("register")}
           />
         )
+      ) : isAdmin ? (
+        <AdminDashboard
+          currentUser={currentUser}
+          token={currentToken}
+        />
       ) : (
         <>
           <main>

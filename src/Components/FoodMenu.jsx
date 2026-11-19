@@ -1,68 +1,56 @@
 
-import { useState } from "react";
-import "./../styles/FoodMenu.css";
+import { useState, useEffect } from "react";
+import "../Styles/FoodMenu.css";
+
+const categories = [
+  "All",
+  "Fast Food",
+  "Snacks",
+  "Main Course",
+  "Drinks",
+];
 
 function FoodMenu({ onAddToCart }) {
+  const [foods, setFoods] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const foods = [
-    {
-      id: 1,
-      name: "Chicken Burger",
-      category: "Fast Food",
-      price: 150,
-      emoji: "🍔",
-    },
-    {
-      id: 2,
-      name: "Pizza",
-      category: "Fast Food",
-      price: 250,
-      emoji: "🍕",
-    },
-    {
-      id: 3,
-      name: "Sandwich",
-      category: "Snacks",
-      price: 80,
-      emoji: "🥪",
-    },
-    {
-      id: 4,
-      name: "Fried Rice",
-      category: "Main Course",
-      price: 180,
-      emoji: "🍚",
-    },
-    {
-      id: 5,
-      name: "Coffee",
-      category: "Drinks",
-      price: 60,
-      emoji: "☕",
-    },
-    {
-      id: 6,
-      name: "French Fries",
-      category: "Snacks",
-      price: 100,
-      emoji: "🍟",
-    },
-  ];
+  // Load foods from MySQL database through backend API
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/foods");
+        const data = await response.json();
 
-  const categories = [
-    "All",
-    "Fast Food",
-    "Snacks",
-    "Main Course",
-    "Drinks",
-  ];
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Failed to load foods.");
+        }
 
+        const foodsWithImages = data.foods.map((food) => ({
+          ...food,
+          price: Number(food.price),
+          image: food.image_url || "",
+        }));
+
+        setFoods(foodsWithImages);
+      } catch (err) {
+        console.error("Food loading error:", err);
+        setError("Unable to load food menu. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoods();
+  }, []);
+
+  // Search and category filtering
   const filteredFoods = foods.filter((food) => {
     const matchesSearch = food.name
       .toLowerCase()
-      .includes(searchTerm.toLowerCase().trim());
+      .includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "All" ||
@@ -73,39 +61,30 @@ function FoodMenu({ onAddToCart }) {
 
   return (
     <section className="menu-section" id="menu">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">OUR MENU</p>
-          <h2>Discover Your Favorites</h2>
-          <p>Delicious meals for your campus life.</p>
-        </div>
-
-        <span className="menu-count">
-          {filteredFoods.length}{" "}
-          {filteredFoods.length === 1 ? "choice" : "choices"}
-        </span>
+      <div className="menu-heading">
+        <h2>Our Food Menu</h2>
+        <p>Choose your favorite food at an affordable price!</p>
       </div>
 
-      <div className="search-container">
+      <div className="menu-search">
         <input
           type="text"
           placeholder="Search your favorite food..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="food-search"
         />
       </div>
 
-      <div className="category-filters">
+      <div className="menu-categories">
         {categories.map((category) => (
           <button
             key={category}
-            type="button"
-            className={`category-button ${
-              selectedCategory === category ? "active" : ""
-            }`}
+            className={
+              selectedCategory === category
+                ? "category-btn active"
+                : "category-btn"
+            }
             onClick={() => setSelectedCategory(category)}
-            aria-pressed={selectedCategory === category}
           >
             {category}
           </button>
@@ -113,50 +92,52 @@ function FoodMenu({ onAddToCart }) {
       </div>
 
       <div className="food-grid">
-        {filteredFoods.length > 0 ? (
+        {loading ? (
+          <p className="no-food-message">Loading food menu...</p>
+        ) : error ? (
+          <p className="no-food-message">{error}</p>
+        ) : filteredFoods.length > 0 ? (
           filteredFoods.map((food) => (
-            <article className="food-card" key={food.id}>
-              <div className="food-image">{food.emoji}</div>
+            <div className="food-card" key={food.id}>
+              <div className="food-image">
+                {food.image ? (
+                  <img
+                    src={food.image}
+                    alt={food.name}
+                    className="food-photo"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="food-no-image">
+                    Image not added
+                  </div>
+                )}
+              </div>
 
               <div className="food-info">
-                <span className="food-category">
-                  {food.category}
-                </span>
-
                 <h3>{food.name}</h3>
+                <p className="food-category">{food.category}</p>
 
                 <div className="food-bottom">
-                  <strong>৳{food.price}</strong>
+                  <span className="food-price">
+                    ৳{food.price}
+                  </span>
 
                   <button
-                    type="button"
-                    className="add-button"
+                    className="add-to-cart-btn"
                     onClick={() => onAddToCart(food)}
-                    aria-label={`Add ${food.name} to cart`}
                   >
-                    +
+                    Add to Cart
                   </button>
                 </div>
               </div>
-            </article>
+            </div>
           ))
         ) : (
-          <div className="no-foods">
-            <span>🍽️</span>
-            <h3>No food found!</h3>
-            <p>Try another food name or category.</p>
-
-            <button
-              type="button"
-              className="reset-button"
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("All");
-              }}
-            >
-              Show All Foods
-            </button>
-          </div>
+          <p className="no-food-message">No food found!</p>
         )}
       </div>
     </section>
