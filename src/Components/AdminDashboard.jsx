@@ -30,6 +30,10 @@ function AdminDashboard({ currentUser, token }) {
   const [editingFoodId, setEditingFoodId] = useState(null);
   const [savingFood, setSavingFood] = useState(false);
 
+  // Search and category filter
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   // Load dashboard stats and orders
   const loadDashboard = async () => {
     try {
@@ -65,7 +69,7 @@ function AdminDashboard({ currentUser, token }) {
     }
   };
 
-  // Load foods from database for Admin
+  // Load foods from database
   const loadAdminFoods = async () => {
     try {
       setFoodsLoading(true);
@@ -292,11 +296,26 @@ function AdminDashboard({ currentUser, token }) {
     );
   }
 
-  const availableFoods = foods.filter(
+  // Search and category filtering
+  const filteredFoods = foods.filter((food) => {
+    const search = searchTerm.trim().toLowerCase();
+
+    const matchesSearch =
+      (food.name || "").toLowerCase().includes(search) ||
+      (food.description || "").toLowerCase().includes(search);
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      food.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const availableFoods = filteredFoods.filter(
     (food) => Number(food.is_available) === 1
   );
 
-  const unavailableFoods = foods.filter(
+  const unavailableFoods = filteredFoods.filter(
     (food) => Number(food.is_available) === 0
   );
 
@@ -568,6 +587,51 @@ function AdminDashboard({ currentUser, token }) {
 
         {foodMessage && <p className="admin-food-success">{foodMessage}</p>}
         {foodError && <p className="admin-food-error">{foodError}</p>}
+
+        {/* Search and Category Filter */}
+        <div className="admin-food-filters">
+          <div className="admin-form-group">
+            <label htmlFor="food-search">Search Food</label>
+            <input
+              id="food-search"
+              type="text"
+              placeholder="Search by food name or description..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <div className="admin-form-group">
+            <label htmlFor="food-filter-category">Filter by Category</label>
+            <select
+              id="food-filter-category"
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+            >
+              <option value="All">All Categories</option>
+              {foodCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="admin-refresh"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedCategory("All");
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <p className="admin-food-filter-count">
+          Showing {filteredFoods.length} of {foods.length} foods
+        </p>
 
         {/* Available Foods */}
         <div className="admin-food-list-heading">

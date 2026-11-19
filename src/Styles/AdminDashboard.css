@@ -505,3 +505,43 @@
   font-size: 11px;
   color: #777;
 }
+
+
+/* Search and Category Filters */
+.admin-food-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  align-items: end;
+  gap: 16px;
+  margin: 25px 0 12px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.admin-food-filters .admin-form-group {
+  margin: 0;
+}
+
+.admin-food-filters input,
+.admin-food-filters select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-food-filter-count {
+  margin: 10px 0 20px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .admin-food-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-food-filters .admin-refresh {
+    width: 100%;
+  }
+}
