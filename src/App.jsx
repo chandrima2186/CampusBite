@@ -8,6 +8,7 @@ import Hero from "./Components/Hero";
 import FoodMenu from "./Components/FoodMenu";
 import Cart from "./Components/Cart";
 import Checkout from "./Components/Checkout";
+import MyOrders from "./Components/MyOrders";
 import About from "./Components/About";
 import Footer from "./Components/Footer";
 import Login from "./Components/Login";
@@ -111,6 +112,7 @@ function App() {
           setShowCheckout(false);
           setShowCart((visible) => !visible);
         }}
+        onMyOrdersClick={() => openPage("my-orders")}
       />
 
       {!currentUser ? (
@@ -130,33 +132,42 @@ function App() {
       ) : (
         <>
           <main>
-            <Hero />
-
-            <FoodMenu onAddToCart={handleAddToCart} />
-
-            {showCart && !showCheckout && (
-              <Cart
-                cartItems={cartItems}
-                onIncrease={handleIncrease}
-                onDecrease={handleDecrease}
-                onClose={() => setShowCart(false)}
-                onCheckout={handleCheckout}
-              />
-            )}
-
-            {showCheckout && (
-              <Checkout
-                cartItems={cartItems}
+            {currentPage === "my-orders" ? (
+              <MyOrders
                 token={currentToken}
-                onBack={() => {
-                  setShowCheckout(false);
-                  setShowCart(true);
-                }}
-                onOrderComplete={handleOrderComplete}
+                onBack={() => openPage("home")}
               />
-            )}
+            ) : (
+              <>
+                <Hero />
 
-            <About />
+                <FoodMenu onAddToCart={handleAddToCart} />
+
+                {showCart && !showCheckout && (
+                  <Cart
+                    cartItems={cartItems}
+                    onIncrease={handleIncrease}
+                    onDecrease={handleDecrease}
+                    onClose={() => setShowCart(false)}
+                    onCheckout={handleCheckout}
+                  />
+                )}
+
+                {showCheckout && (
+                  <Checkout
+                    cartItems={cartItems}
+                    token={currentToken}
+                    onBack={() => {
+                      setShowCheckout(false);
+                      setShowCart(true);
+                    }}
+                    onOrderComplete={handleOrderComplete}
+                  />
+                )}
+
+                <About />
+              </>
+            )}
           </main>
 
           <Footer />

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./../Styles/Checkout.css";
 
 function Checkout({ cartItems, token, onBack, onOrderComplete }) {
@@ -15,7 +15,10 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
 
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [savedOrderId, setSavedOrderId] = useState(null);
   const [confirmedTotal, setConfirmedTotal] = useState(0);
+  const [orderStatus, setOrderStatus] = useState("pending");
+  const [trackingError, setTrackingError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -40,15 +43,16 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
     setErrorMessage("");
   };
 
+  // PLACE ORDER
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (isSubmitting || cartItems.length === 0) {
-      return;
-    }
+    if (isSubmitting || cartItems.length === 0) return;
 
     if (!token) {
-      setErrorMessage("Your login session is missing. Please log in again.");
+      setErrorMessage(
+        "Your login session is missing. Please log in again."
+      );
       return;
     }
 
@@ -83,13 +87,13 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Could not place your order."
-        );
+        throw new Error(data.message || "Could not place your order.");
       }
 
+      setSavedOrderId(data.orderId);
       setOrderNumber(`CB-${data.orderId}`);
       setConfirmedTotal(Number(data.totalPrice));
+      setOrderStatus("pending");
       setOrderPlaced(true);
     } catch (error) {
       console.error("Checkout error:", error);
@@ -104,6 +108,68 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
     }
   };
 
+  // LIVE ORDER TRACKING
+  useEffect(() => {
+    if (!orderPlaced || !savedOrderId || !token) return;
+
+    let intervalId;
+
+    const fetchOrderStatus = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/orders/${savedOrderId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Could not fetch order status."
+          );
+        }
+
+        const currentStatus = data.order.status;
+
+        setOrderStatus(currentStatus);
+        setTrackingError("");
+
+        if (
+          currentStatus === "completed" ||
+          currentStatus === "cancelled"
+        ) {
+          clearInterval(intervalId);
+        }
+      } catch (error) {
+        console.error("Tracking error:", error);
+        setTrackingError(error.message);
+      }
+    };
+
+    fetchOrderStatus();
+    intervalId = setInterval(fetchOrderStatus, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [orderPlaced, savedOrderId, token]);
+
+  // ORDER STATUS LABEL
+  const getStatusLabel = (status) => {
+    const statusLabels = {
+      pending: "Order Received",
+      preparing: "Preparing Your Food",
+      ready: "Ready for Pickup",
+      completed: "Order Completed",
+      cancelled: "Order Cancelled",
+    };
+
+    return statusLabels[status] || status;
+  };
+
+  // ORDER CONFIRMATION PAGE
   if (orderPlaced) {
     return (
       <section className="checkout-section">
@@ -119,18 +185,10 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
           </p>
 
           <div className="confirmation-details">
-            <p>
-              <strong>Order ID:</strong> {orderNumber}
-            </p>
-            <p>
-              <strong>Role:</strong> {formData.role}
-            </p>
-            <p>
-              <strong>Phone:</strong> {formData.phone}
-            </p>
-            <p>
-              <strong>Location:</strong> {formData.location}
-            </p>
+            <p><strong>Order ID:</strong> {orderNumber}</p>
+            <p><strong>Role:</strong> {formData.role}</p>
+            <p><strong>Phone:</strong> {formData.phone}</p>
+            <p><strong>Location:</strong> {formData.location}</p>
 
             {formData.locationDetails && (
               <p>
@@ -140,12 +198,109 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
             )}
 
             <p>
-              <strong>Pickup time:</strong>{" "}
-              {formData.pickupTime}
+              <strong>Pickup time:</strong> {formData.pickupTime}
             </p>
+
             <p>
               <strong>Total:</strong> ৳{confirmedTotal.toFixed(2)}
             </p>
+          </div>
+
+          {/* LIVE ORDER TRACKING */}
+          <div
+            style={{
+              marginTop: "25px",
+              padding: "24px",
+              borderRadius: "14px",
+              background: "#eaf3ff",
+              border: "2px solid #bfdbfe",
+              textAlign: "center",
+              color: "#172554",
+            }}
+          >
+            <h3
+              style={{
+                color: "#1e3a8a",
+                fontSize: "22px",
+                fontWeight: "700",
+                marginBottom: "18px",
+              }}
+            >
+              Live Order Tracking
+            </h3>
+
+            <p
+              style={{
+                color: "#1f2937",
+                fontSize: "15px",
+                fontWeight: "600",
+                marginBottom: "10px",
+              }}
+            >
+              Current Status:
+            </p>
+
+            <h3
+              style={{
+                color:
+                  orderStatus === "cancelled"
+                    ? "#b91c1c"
+                    : orderStatus === "ready" ||
+                      orderStatus === "completed"
+                    ? "#166534"
+                    : orderStatus === "preparing"
+                    ? "#92400e"
+                    : "#1d4ed8",
+                background: "#ffffff",
+                display: "inline-block",
+                padding: "12px 22px",
+                borderRadius: "10px",
+                fontSize: "20px",
+                fontWeight: "800",
+                marginBottom: "14px",
+              }}
+            >
+              {getStatusLabel(orderStatus)}
+            </h3>
+
+            {orderStatus !== "completed" &&
+              orderStatus !== "cancelled" && (
+                <p
+                  style={{
+                    color: "#374151",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    marginTop: "5px",
+                  }}
+                >
+                  Status automatically updates every 5 seconds.
+                </p>
+              )}
+
+            {orderStatus === "completed" && (
+              <p style={{ color: "#166534", fontWeight: "600" }}>
+                Your order has been completed. Thank you!
+              </p>
+            )}
+
+            {orderStatus === "cancelled" && (
+              <p style={{ color: "#b91c1c", fontWeight: "600" }}>
+                Your order has been cancelled.
+              </p>
+            )}
+
+            {trackingError && (
+              <p
+                role="alert"
+                style={{
+                  color: "#b91c1c",
+                  fontWeight: "600",
+                  marginTop: "12px",
+                }}
+              >
+                Tracking update failed: {trackingError}
+              </p>
+            )}
           </div>
 
           <p className="checkout-note">
@@ -335,9 +490,7 @@ function Checkout({ cartItems, token, onBack, onOrderComplete }) {
 
                   <div className="checkout-food-details">
                     <strong>{item.name}</strong>
-                    <small>
-                      ৳{item.price} × {item.quantity}
-                    </small>
+                    <small>৳{item.price} × {item.quantity}</small>
                   </div>
 
                   <strong>৳{item.price * item.quantity}</strong>

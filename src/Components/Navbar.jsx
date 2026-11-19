@@ -8,6 +8,7 @@ function Navbar({
   onLoginClick,
   onRegisterClick,
   onLogout,
+  onMyOrdersClick,
 }) {
   const isAdmin = currentUser?.role === "admin";
 
@@ -32,6 +33,18 @@ function Navbar({
             <nav>
               <a href="#home">Home</a>
               <a href="#menu">Food Menu</a>
+
+              {/* MY ORDERS */}
+              <a
+                href="#my-orders"
+                onClick={(event) => {
+                  event.preventDefault();
+                  onMyOrdersClick();
+                }}
+              >
+                My Orders
+              </a>
+
               <a href="#about">About</a>
             </nav>
           )}
