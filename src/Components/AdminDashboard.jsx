@@ -30,9 +30,13 @@ function AdminDashboard({ currentUser, token }) {
   const [editingFoodId, setEditingFoodId] = useState(null);
   const [savingFood, setSavingFood] = useState(false);
 
-  // Search and category filter
+  // Food search and category filter
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Order search and status filter
+  const [orderSearchTerm, setOrderSearchTerm] = useState("");
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState("All");
 
   // Load dashboard stats and orders
   const loadDashboard = async () => {
@@ -319,6 +323,22 @@ function AdminDashboard({ currentUser, token }) {
     (food) => Number(food.is_available) === 0
   );
 
+  // Search and status filtering for orders
+  const filteredOrders = orders.filter((order) => {
+    const search = orderSearchTerm.trim().toLowerCase();
+
+    const matchesSearch =
+      String(order.id).includes(search) ||
+      (order.customer_name || "").toLowerCase().includes(search) ||
+      (order.role || "").toLowerCase().includes(search);
+
+    const matchesStatus =
+      selectedOrderStatus === "All" ||
+      order.status === selectedOrderStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
   const stats = [
     { title: "Total Foods", value: dashboard.availableFoods },
     { title: "Available Foods", value: dashboard.availableFoods },
@@ -588,7 +608,7 @@ function AdminDashboard({ currentUser, token }) {
         {foodMessage && <p className="admin-food-success">{foodMessage}</p>}
         {foodError && <p className="admin-food-error">{foodError}</p>}
 
-        {/* Search and Category Filter */}
+        {/* Food Search and Category Filter */}
         <div className="admin-food-filters">
           <div className="admin-form-group">
             <label htmlFor="food-search">Search Food</label>
@@ -658,10 +678,62 @@ function AdminDashboard({ currentUser, token }) {
 
       {/* Order Management */}
       <section className="admin-orders">
-        <h2>Recent Orders</h2>
+        <div className="admin-section-heading">
+          <div>
+            <h2>Order Management</h2>
+            <p>Search orders and manage their status.</p>
+          </div>
+        </div>
 
-        {orders.length === 0 ? (
-          <p>No orders found.</p>
+        {/* Order Search and Status Filter */}
+        <div className="admin-order-filters">
+          <div className="admin-form-group">
+            <label htmlFor="order-search">Search Order</label>
+            <input
+              id="order-search"
+              type="text"
+              placeholder="Search by Order ID or Customer Name..."
+              value={orderSearchTerm}
+              onChange={(event) => setOrderSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <div className="admin-form-group">
+            <label htmlFor="order-status-filter">Filter by Status</label>
+            <select
+              id="order-status-filter"
+              value={selectedOrderStatus}
+              onChange={(event) =>
+                setSelectedOrderStatus(event.target.value)
+              }
+            >
+              <option value="All">All Orders</option>
+              <option value="pending">Pending</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="admin-refresh"
+            onClick={() => {
+              setOrderSearchTerm("");
+              setSelectedOrderStatus("All");
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <p className="admin-order-filter-count">
+          Showing {filteredOrders.length} of {orders.length} orders
+        </p>
+
+        {filteredOrders.length === 0 ? (
+          <p>No matching orders found.</p>
         ) : (
           <div className="admin-table-wrapper">
             <table className="admin-table">
@@ -678,7 +750,7 @@ function AdminDashboard({ currentUser, token }) {
               </thead>
 
               <tbody>
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <tr key={order.id}>
                     <td>#{order.id}</td>
                     <td>{order.customer_name}</td>
